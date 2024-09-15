@@ -20,7 +20,7 @@
       tags: config
       ansible.builtin.template:
         src: "{{ item.src }}"
-        dest: "/data/{{ item.dest }}"
+        dest: "{{ item.dest }}"
         owner: nobody
         group: nogroup
       with_items:
