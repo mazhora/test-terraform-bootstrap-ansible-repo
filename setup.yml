@@ -1,0 +1,42 @@
+- hosts: all
+  become: true
+
+  roles:
+    - role: geerlingguy.docker
+
+  tasks:
+    - name: Create a network
+      docker_network:
+        name: nginx-network
+
+    - name: Create a volumes directory if it does not exist
+      ansible.builtin.file:
+        path: "/data/{{ item }}"
+        state: directory
+      loop:
+        - "nginx_http"
+
+    - name: Templates
+      tags: config
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "/data/{{ item.dest }}"
+        owner: nobody
+        group: nogroup
+      with_items:
+        - src: "index.html.j2"
+          dest: "/data/nginx_http/index.htm"
+
+    - name: nginx container
+      community.general.docker_container:
+        name: "nginx"
+        image: "nginx"
+        restart_policy: always
+        pull: yes
+        restart: true
+        ports:
+          - "80:80"
+        networks:
+          - name: "nginx-network"
+        volumes:
+          - /data/nginx_http/:/usr/share/nginx/html
